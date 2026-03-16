@@ -121,6 +121,7 @@
 
   <!-- Audio elements — hidden, preloaded -->
   <audio id="snd-phoneguy-night1" src="assets/audio/phoneguy_night1.mp3" preload="auto"></audio>
+  <audio id="snd-phoneguy-night2" src="assets/audio/phoneguy_night2.mp3" preload="auto"></audio>
   <audio id="snd-ambience"  src="assets/audio/ambience.wav"       loop></audio>
   <audio id="snd-musicbox"  src="assets/audio/musicbox.wav"       loop></audio>
   <audio id="snd-jumpscare" src="assets/audio/jumpscare.wav"></audio>
@@ -765,50 +766,42 @@
       document.getElementById("restart-btn").classList.add("hidden");
       document.getElementById("overlay").classList.remove("hidden");
 
-      if (n === 1) {
-        // Night 1: audio version — auto-plays if browser allows, else prompts click
-        const audio = document.getElementById("snd-phoneguy-night1");
+      const audioId = `snd-phoneguy-night${n}`;
+      const audio = document.getElementById(audioId);
 
+      if (audio) {
+        // Audio version — show play button (guarantees user gesture before play())
         let dismissed = false;
 
         function dismiss() {
           if (dismissed) return;
           dismissed = true;
           audio.removeEventListener("ended", dismiss);
-          stopSound("snd-phoneguy-night1");
+          stopSound(audioId);
           document.getElementById("overlay").classList.add("hidden");
           document.getElementById("restart-btn").classList.remove("hidden");
           document.getElementById("overlay").removeEventListener("click", dismiss);
           _startNightInner(n);
         }
 
-        function startAudio() {
+        document.getElementById("overlay-msg").innerHTML =
+          `${msg}<br>
+          <button id="pg-start-btn" class="mt-4 px-6 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-lg text-sm transition animate-pulse">
+            ▶ Play Phone Call
+          </button>`;
+
+        document.getElementById("pg-start-btn").addEventListener("click", (e) => {
+          e.stopPropagation();
           audio.currentTime = 0;
+          audio.play().catch(() => {});
           audio.addEventListener("ended", dismiss, { once: true });
           document.getElementById("overlay-msg").innerHTML =
             `${msg}<br><span class="text-xs text-gray-500 mt-2 block">Click to skip</span>`;
           document.getElementById("overlay").addEventListener("click", dismiss, { once: true });
-        }
-
-        // Try autoplay; if blocked, show a prominent "click to start" button
-        audio.currentTime = 0;
-        audio.play().then(() => {
-          startAudio();
-        }).catch(() => {
-          document.getElementById("overlay-msg").innerHTML =
-            `${msg}<br>
-            <button id="pg-start-btn" class="mt-4 px-6 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-lg text-sm transition animate-pulse">
-              ▶ Play Phone Call
-            </button>`;
-          document.getElementById("pg-start-btn").addEventListener("click", (e) => {
-            e.stopPropagation();
-            audio.play().catch(() => {});
-            startAudio();
-          }, { once: true });
-        });
+        }, { once: true });
 
       } else {
-        // Nights 2–6: text only, auto-skips after 4 s
+        // No audio for this night — text only, auto-skips after 4 s
         document.getElementById("overlay-msg").innerHTML =
           `${msg}<br><span class="text-xs text-gray-500 mt-2 block">Click to skip (auto-skips in 4s)</span>`;
 
