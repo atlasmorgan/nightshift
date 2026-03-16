@@ -766,12 +766,9 @@
       document.getElementById("overlay").classList.remove("hidden");
 
       if (n === 1) {
-        // Night 1: audio version — click starts the call, audio end auto-dismisses
+        // Night 1: audio version — auto-plays if browser allows, else prompts click
         const audio = document.getElementById("snd-phoneguy-night1");
-        document.getElementById("overlay-msg").innerHTML =
-          `${msg}<br><span class="text-xs text-gray-500 mt-2 block">Click to play · click again to skip</span>`;
 
-        let audioStarted = false;
         let dismissed = false;
 
         function dismiss() {
@@ -781,23 +778,34 @@
           stopSound("snd-phoneguy-night1");
           document.getElementById("overlay").classList.add("hidden");
           document.getElementById("restart-btn").classList.remove("hidden");
-          document.getElementById("overlay").removeEventListener("click", handleClick);
+          document.getElementById("overlay").removeEventListener("click", dismiss);
           _startNightInner(n);
         }
 
-        function handleClick() {
-          if (!audioStarted) {
-            audioStarted = true;
-            audio.currentTime = 0;
-            audio.play().catch(() => {});
-            audio.addEventListener("ended", dismiss, { once: true });
-            document.getElementById("overlay-msg").innerHTML =
-              `${msg}<br><span class="text-xs text-gray-500 mt-2 block">Click to skip</span>`;
-            document.getElementById("overlay").addEventListener("click", dismiss, { once: true });
-          }
+        function startAudio() {
+          audio.currentTime = 0;
+          audio.addEventListener("ended", dismiss, { once: true });
+          document.getElementById("overlay-msg").innerHTML =
+            `${msg}<br><span class="text-xs text-gray-500 mt-2 block">Click to skip</span>`;
+          document.getElementById("overlay").addEventListener("click", dismiss, { once: true });
         }
 
-        document.getElementById("overlay").addEventListener("click", handleClick, { once: true });
+        // Try autoplay; if blocked, show a prominent "click to start" button
+        audio.currentTime = 0;
+        audio.play().then(() => {
+          startAudio();
+        }).catch(() => {
+          document.getElementById("overlay-msg").innerHTML =
+            `${msg}<br>
+            <button id="pg-start-btn" class="mt-4 px-6 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-lg text-sm transition animate-pulse">
+              ▶ Play Phone Call
+            </button>`;
+          document.getElementById("pg-start-btn").addEventListener("click", (e) => {
+            e.stopPropagation();
+            audio.play().catch(() => {});
+            startAudio();
+          }, { once: true });
+        });
 
       } else {
         // Nights 2–6: text only, auto-skips after 4 s
