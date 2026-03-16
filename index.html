@@ -122,6 +122,10 @@
   <!-- Audio elements — hidden, preloaded -->
   <audio id="snd-phoneguy-night1" src="assets/audio/phoneguy_night1.mp3" preload="auto"></audio>
   <audio id="snd-phoneguy-night2" src="assets/audio/phoneguy_night2.mp3" preload="auto"></audio>
+  <audio id="snd-phoneguy-night3" src="assets/audio/phoneguy_night3.mp3" preload="auto"></audio>
+  <audio id="snd-phoneguy-night4" src="assets/audio/phoneguy_night4.mp3" preload="auto"></audio>
+  <audio id="snd-phoneguy-night5" src="assets/audio/phoneguy_night5.mp3" preload="auto"></audio>
+  <audio id="snd-phoneguy-night6" src="assets/audio/phoneguy_night6.mp3" preload="auto"></audio>
   <audio id="snd-ambience"  src="assets/audio/ambience.wav"       loop></audio>
   <audio id="snd-musicbox"  src="assets/audio/musicbox.wav"       loop></audio>
   <audio id="snd-jumpscare" src="assets/audio/jumpscare.wav"></audio>
@@ -217,6 +221,20 @@
       <button id="instructions-skip" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 rounded-lg font-bold transition">
         Skip
       </button>
+    </div>
+  </div>
+
+  <!-- DEV PANEL — hidden by default; visible only when ?dev is in the URL -->
+  <div id="dev-panel" class="hidden fixed bottom-4 right-4 z-[100] bg-gray-900 border border-yellow-500 rounded-xl p-4 shadow-2xl text-sm">
+    <div class="text-yellow-400 font-bold mb-2 text-xs uppercase tracking-widest">⚙ Dev Mode</div>
+    <div class="text-gray-400 text-xs mb-3">Jump to night:</div>
+    <div class="flex gap-2 flex-wrap">
+      <button onclick="devJumpToNight(1)" class="px-3 py-1 rounded bg-gray-700 hover:bg-yellow-500 hover:text-black font-bold transition">1</button>
+      <button onclick="devJumpToNight(2)" class="px-3 py-1 rounded bg-gray-700 hover:bg-yellow-500 hover:text-black font-bold transition">2</button>
+      <button onclick="devJumpToNight(3)" class="px-3 py-1 rounded bg-gray-700 hover:bg-yellow-500 hover:text-black font-bold transition">3</button>
+      <button onclick="devJumpToNight(4)" class="px-3 py-1 rounded bg-gray-700 hover:bg-yellow-500 hover:text-black font-bold transition">4</button>
+      <button onclick="devJumpToNight(5)" class="px-3 py-1 rounded bg-gray-700 hover:bg-yellow-500 hover:text-black font-bold transition">5</button>
+      <button onclick="devJumpToNight(6)" class="px-3 py-1 rounded bg-gray-700 hover:bg-yellow-500 hover:text-black font-bold transition">6</button>
     </div>
   </div>
 
@@ -1911,6 +1929,23 @@
     }
 
 
+    /** devJumpToNight(n) — dev mode only; jumps directly to any night */
+    function devJumpToNight(n) {
+      if (gameState.winTimerId) {
+        clearTimeout(gameState.winTimerId);
+        gameState.winTimerId = null;
+      }
+      document.getElementById("overlay").classList.add("hidden");
+      document.getElementById("restart-btn").classList.remove("hidden");
+      stopSound("snd-phoneguy-night1");
+      stopSound("snd-phoneguy-night2");
+      stopSound("snd-phoneguy-night3");
+      stopSound("snd-phoneguy-night4");
+      stopSound("snd-phoneguy-night5");
+      stopSound("snd-phoneguy-night6");
+      startNight(n);
+    }
+
     /* ══════════════════════════════════════════════════════════════════
        BOOT — show name modal on first visit, then start Night 1.
     ══════════════════════════════════════════════════════════════════ */
@@ -1940,6 +1975,11 @@
       startNight(1);
     }
     // Otherwise the modal is visible; startNight(1) is called after name submission.
+
+    // Dev mode: append ?dev to the URL to enable the night skipper panel
+    if (new URLSearchParams(window.location.search).has('dev')) {
+      document.getElementById('dev-panel').classList.remove('hidden');
+    }
 
   </script>
 </body>
