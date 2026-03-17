@@ -506,7 +506,7 @@
       },
       {
         name: "Mangle",       emoji: "🦊", location: "Prize Corner",
-        aggression: 3, active: false, canFlashlight: false, needsMask: true,
+        aggression: 3, active: false, canFlashlight: true, needsMask: true,
         pathKey: "VENT", startDelay: 12000,
       },
       {
@@ -1203,13 +1203,13 @@
       if (!drainPower(FLASHLIGHT_COST)) return;
       playSound("snd-flashlight");
 
-      // Find ALL animatronics in the Left Hall (not just the first)
+      // Find ALL animatronics in the Left Hall or Vent (not just the first)
       const targets = gameState.animatronics.filter(
-        a => a.active && a.location === "Left Hall"
+        a => a.active && (a.location === "Left Hall" || a.location === "Vent")
       );
 
       if (targets.length === 0) {
-        logMessage("🔦 Flashlight: Left Hall is clear.");
+        logMessage("🔦 Flashlight: Left Hall and Vent are clear.");
         renderAll();
         return;
       }
