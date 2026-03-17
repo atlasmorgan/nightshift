@@ -591,9 +591,6 @@
       /* Per-night stats */
       stats: { actionsCount: 0, closeCallCount: 0 },
 
-      /* Balloon Boy flashlight-disable state */
-      flashlightDisabled:     false,
-      flashlightDisableTimer: null,
 
       /* Mangle camera-watch pressure */
       lastVentCameraCheck:  0,
@@ -1135,7 +1132,7 @@
     function resolveOfficeEncounter(a) {
       // Balloon Boy doesn't need the mask — he just disables the flashlight
       if (a.name === "Balloon Boy") {
-        triggerBalloonBoyDisable();
+        triggerBalloonBoyDrain();
         return;
       }
 
@@ -1154,26 +1151,15 @@
     }
 
     /**
-     * triggerBalloonBoyDisable()
-     * Balloon Boy enters the office and disables the flashlight for 20 s.
+     * triggerBalloonBoyDrain()
+     * Balloon Boy enters the office and drains 5% power.
      */
-    function triggerBalloonBoyDisable() {
-      if (gameState.flashlightDisabled) return; // already disabled
-      gameState.flashlightDisabled = true;
-
-      // Push BB back to Left Hall
+    function triggerBalloonBoyDrain() {
       const bb = gameState.animatronics.find(a => a.name === "Balloon Boy");
       if (bb) bb.location = "Left Hall";
 
-      logMessage("👦 Balloon Boy in office! Flashlight disabled for 20s!");
-      renderAllButtons();
-
-      gameState.flashlightDisableTimer = setTimeout(() => {
-        gameState.flashlightDisabled = false;
-        gameState.flashlightDisableTimer = null;
-        logMessage("🔦 Flashlight restored!");
-        renderAllButtons();
-      }, 20000);
+      logMessage("👦 Balloon Boy in office! Stole 5% power!");
+      drainPower(5);
     }
 
 
@@ -1523,14 +1509,6 @@
         }
       });
 
-      // Force-disable flashlight button if Balloon Boy killed it
-      if (gameState.flashlightDisabled) {
-        const flBtn = document.getElementById("btn-flashlight");
-        if (flBtn) {
-          flBtn.disabled = true;
-          flBtn.classList.add("opacity-40", "cursor-not-allowed");
-        }
-      }
 
       // Update mask label to reflect current state
       document.getElementById("mask-label").textContent =
