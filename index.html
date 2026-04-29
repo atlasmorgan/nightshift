@@ -2047,6 +2047,8 @@
     });
 
     document.getElementById('new-game-btn').addEventListener('click', () => {
+      menuMusic.pause();
+      menuMusic.currentTime = 0;
       document.getElementById('menu-screen').classList.add('hidden');
       if (localStorage.getItem('playerName')) {
         document.getElementById('nameModal').classList.add('hidden');
