@@ -160,6 +160,14 @@
       color: #fff;
       box-shadow: 0 0 30px 8px rgba(255, 224, 102, 0.7);
     }
+    #sound-hint {
+      font-family: 'Courier New', monospace;
+      font-size: clamp(1rem, 2.5vw, 1.4rem);
+      letter-spacing: 0.12em;
+      color: rgba(255, 255, 255, 0.85);
+      pointer-events: none;
+      text-align: center;
+    }
     @media (max-width: 520px) {
       #menu-header {
         top: auto;
@@ -180,6 +188,7 @@
 <body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-2 sm:p-4">
 
   <!-- Audio elements — hidden, preloaded -->
+  <audio id="snd-menu" src="assets/audio/menu_title.mp3" preload="auto" loop autoplay></audio>
   <audio id="snd-phoneguy-night1" src="assets/audio/phoneguy_night1.mp3" preload="auto"></audio>
   <audio id="snd-phoneguy-night2" src="assets/audio/phoneguy_night2.mp3" preload="auto"></audio>
   <audio id="snd-phoneguy-night3" src="assets/audio/phoneguy_night3.mp3" preload="auto"></audio>
@@ -303,6 +312,7 @@
     <div id="menu-header">
       <span id="menu-title">NIGHT SHIFT</span>
       <button id="new-game-btn">NEW GAME</button>
+      <span id="sound-hint">CLICK TO ENABLE SOUND</span>
     </div>
   </div>
 
@@ -780,6 +790,9 @@
      * Sets gameActive, starts the night clock and animatronic timers.
      */
     function _startNightInner(n) {
+      const menuMusic = document.getElementById('snd-menu');
+      menuMusic.pause();
+      menuMusic.currentTime = 0;
       gameState.gameActive = true;
 
       // Start the 1-second night clock
@@ -2017,6 +2030,22 @@
     });
 
     // NEW GAME button — hide menu then boot into the game
+    const menuMusic = document.getElementById('snd-menu');
+
+    const soundHint = document.getElementById('sound-hint');
+    function hideSoundHint() { soundHint.style.display = 'none'; }
+
+    // Attempt immediate autoplay; if the browser blocks it, retry on first interaction.
+    menuMusic.play().then(hideSoundHint).catch(() => {
+      function unlockMenuMusic() {
+        menuMusic.play().then(hideSoundHint).catch(() => {});
+        document.removeEventListener('pointerdown', unlockMenuMusic);
+        document.removeEventListener('keydown', unlockMenuMusic);
+      }
+      document.addEventListener('pointerdown', unlockMenuMusic);
+      document.addEventListener('keydown', unlockMenuMusic);
+    });
+
     document.getElementById('new-game-btn').addEventListener('click', () => {
       document.getElementById('menu-screen').classList.add('hidden');
       if (localStorage.getItem('playerName')) {
