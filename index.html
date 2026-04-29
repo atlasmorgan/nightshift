@@ -114,6 +114,66 @@
       position: relative;
       z-index: 1;
     }
+
+    #menu-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background-image: url('https://imgs.search.brave.com/0M0lD_rnt9GUUKnD9VihIVAMB3MqWtGNOqJSYPvTH_o/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly93YWxs/cGFwZXJzLmNvbS9p/bWFnZXMvaGQvZnJl/ZGR5LWZhemJlYXIt/cGljdHVyZXMtMjU2/MC14LTE2MDAtYjE2/bGRiYTdyY3JubWpl/dS5qcGc');
+      background-size: cover;
+      background-position: center top;
+    }
+    #menu-header {
+      position: absolute;
+      top: 1.2rem;
+      right: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.8rem;
+    }
+    #menu-title {
+      font-family: 'Courier New', monospace;
+      font-size: clamp(1.4rem, 5vw, 2.8rem);
+      font-weight: bold;
+      letter-spacing: 0.15em;
+      color: #ff4444;
+      text-shadow: 0 0 12px rgba(255, 68, 68, 0.8), 0 2px 4px rgba(0,0,0,0.9);
+      pointer-events: none;
+    }
+    #new-game-btn {
+      font-family: 'Courier New', monospace;
+      font-size: clamp(1rem, 3.5vw, 2rem);
+      font-weight: bold;
+      letter-spacing: 0.2em;
+      color: #ffe066;
+      background: rgba(0, 0, 0, 0.75);
+      border: 3px solid #ffe066;
+      padding: 0.6em 2em;
+      cursor: pointer;
+      text-transform: uppercase;
+      white-space: nowrap;
+      box-shadow: 0 0 18px 4px rgba(255, 224, 102, 0.4);
+      transition: box-shadow 0.2s, color 0.2s;
+    }
+    #new-game-btn:hover {
+      color: #fff;
+      box-shadow: 0 0 30px 8px rgba(255, 224, 102, 0.7);
+    }
+    @media (max-width: 520px) {
+      #menu-header {
+        top: auto;
+        bottom: 2.5rem;
+        right: 50%;
+        transform: translateX(50%);
+        align-items: center;
+        width: 90%;
+      }
+      #new-game-btn {
+        width: 100%;
+        padding: 0.7em 1em;
+      }
+    }
   </style>
 </head>
 
@@ -127,7 +187,7 @@
   <audio id="snd-phoneguy-night5" src="assets/audio/phoneguy_night5.mp3" preload="auto"></audio>
   <audio id="snd-phoneguy-night6" src="assets/audio/phoneguy_night6.mp3" preload="auto"></audio>
   <audio id="snd-ambience"  src="assets/audio/ambience.wav"       loop></audio>
-  <audio id="snd-musicbox"  src="assets/audio/musicbox.wav"       loop></audio>
+  <audio id="snd-musicbox"  src="assets/audio/musicbox.mp3"       loop></audio>
   <audio id="snd-jumpscare" src="assets/audio/jumpscare.wav"></audio>
   <audio id="snd-flashlight" src="assets/audio/flashlight.wav"></audio>
   <audio id="snd-mask"      src="assets/audio/mask_on.wav"></audio>
@@ -235,6 +295,14 @@
       <button onclick="devJumpToNight(4)" class="px-3 py-1 rounded bg-gray-700 hover:bg-yellow-500 hover:text-black font-bold transition">4</button>
       <button onclick="devJumpToNight(5)" class="px-3 py-1 rounded bg-gray-700 hover:bg-yellow-500 hover:text-black font-bold transition">5</button>
       <button onclick="devJumpToNight(6)" class="px-3 py-1 rounded bg-gray-700 hover:bg-yellow-500 hover:text-black font-bold transition">6</button>
+    </div>
+  </div>
+
+  <!-- MENU SCREEN -->
+  <div id="menu-screen">
+    <div id="menu-header">
+      <span id="menu-title">NIGHT SHIFT</span>
+      <button id="new-game-btn">NEW GAME</button>
     </div>
   </div>
 
@@ -1316,7 +1384,7 @@
 
       // Play the music box sound briefly while winding
       playSound("snd-musicbox");
-      setTimeout(() => stopSound("snd-musicbox"), 3000);
+      setTimeout(() => stopSound("snd-musicbox"), 4000);
 
       renderAll();
     }
@@ -1924,8 +1992,9 @@
       startNight(n);
     }
 
+
     /* ══════════════════════════════════════════════════════════════════
-       BOOT — show name modal on first visit, then start Night 1.
+       BOOT — show menu screen first, then name modal / Night 1.
     ══════════════════════════════════════════════════════════════════ */
 
     // Close leaderboard modal
@@ -1947,12 +2016,16 @@
       if (e.key === 'Enter') document.getElementById('nameSubmit').click();
     });
 
-    // If a name is already saved, skip the modal and start immediately
-    if (localStorage.getItem('playerName')) {
-      document.getElementById('nameModal').classList.add('hidden');
-      startNight(1);
-    }
-    // Otherwise the modal is visible; startNight(1) is called after name submission.
+    // NEW GAME button — hide menu then boot into the game
+    document.getElementById('new-game-btn').addEventListener('click', () => {
+      document.getElementById('menu-screen').classList.add('hidden');
+      if (localStorage.getItem('playerName')) {
+        document.getElementById('nameModal').classList.add('hidden');
+        startNight(1);
+      } else {
+        document.getElementById('nameModal').classList.remove('hidden');
+      }
+    });
 
     // Dev mode: append ?dev to the URL to enable the night skipper panel
     if (new URLSearchParams(window.location.search).has('dev')) {

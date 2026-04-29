@@ -70,3 +70,11 @@ Each night the building gets worse. Passive power drain increases, action costs 
 
 - Single HTML file — open and play, no setup required
 - Firebase Realtime Database for the leaderboard (optional — works without it)
+
+
+
+how to push to github:
+git status
+git add .  --- (if theres any new files)
+git commit -am "message"
+git push
