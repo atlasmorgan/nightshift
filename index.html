@@ -182,13 +182,41 @@
         padding: 0.7em 1em;
       }
     }
+    #intro-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.6s ease;
+    }
+    #intro-logo {
+      max-width: min(400px, 70vw);
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+    #intro-sound-hint {
+      position: absolute;
+      bottom: 2rem;
+      left: 1.5rem;
+      right: 1.5rem;
+      text-align: center;
+      font-family: 'Courier New', monospace;
+      font-size: clamp(1rem, 4vw, 1.8rem);
+      letter-spacing: 0.08em;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.4;
+      transition: opacity 0.4s ease;
+    }
   </style>
 </head>
 
 <body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-2 sm:p-4">
 
   <!-- Audio elements — hidden, preloaded -->
-  <audio id="snd-menu" src="assets/audio/menu_title.mp3" preload="auto" loop autoplay></audio>
+  <audio id="snd-menu" src="assets/audio/menu_title.mp3" preload="auto" loop></audio>
   <audio id="snd-phoneguy-night1" src="assets/audio/phoneguy_night1.mp3" preload="auto"></audio>
   <audio id="snd-phoneguy-night2" src="assets/audio/phoneguy_night2.mp3" preload="auto"></audio>
   <audio id="snd-phoneguy-night3" src="assets/audio/phoneguy_night3.mp3" preload="auto"></audio>
@@ -202,6 +230,7 @@
   <audio id="snd-mask"      src="assets/audio/mask_on.wav"></audio>
   <audio id="snd-static"    src="assets/audio/camera_static.wav"  loop></audio>
   <audio id="snd-powerdown" src="assets/audio/power_down.wav"></audio>
+  <audio id="snd-intro" src="assets/audio/intro_sting.wav" preload="auto"></audio>
 
   <!-- Jumpscare full-screen image (shown briefly on game over) -->
   <img id="jumpscare-img" src="" alt="" />
@@ -307,8 +336,14 @@
     </div>
   </div>
 
+  <!-- INTRO SCREEN -->
+  <div id="intro-screen">
+    <img id="intro-logo" src="assets/images/flame_games_logo.png" alt="Flame Games">
+    <p id="intro-sound-hint">CLICK TO ENABLE SOUND (REQUIRED)</p>
+  </div>
+
   <!-- MENU SCREEN -->
-  <div id="menu-screen">
+  <div id="menu-screen" class="hidden">
     <div id="menu-header">
       <span id="menu-title">NIGHT SHIFT</span>
       <button id="new-game-btn">NEW GAME</button>
@@ -2035,17 +2070,6 @@
     const soundHint = document.getElementById('sound-hint');
     function hideSoundHint() { soundHint.style.display = 'none'; }
 
-    // Attempt immediate autoplay; if the browser blocks it, retry on first interaction.
-    menuMusic.play().then(hideSoundHint).catch(() => {
-      function unlockMenuMusic() {
-        menuMusic.play().then(hideSoundHint).catch(() => {});
-        document.removeEventListener('pointerdown', unlockMenuMusic);
-        document.removeEventListener('keydown', unlockMenuMusic);
-      }
-      document.addEventListener('pointerdown', unlockMenuMusic);
-      document.addEventListener('keydown', unlockMenuMusic);
-    });
-
     document.getElementById('new-game-btn').addEventListener('click', () => {
       menuMusic.pause();
       menuMusic.currentTime = 0;
@@ -2062,6 +2086,59 @@
     if (new URLSearchParams(window.location.search).has('dev')) {
       document.getElementById('dev-panel').classList.remove('hidden');
     }
+
+    // Intro screen logic
+    (function () {
+      const introScreen = document.getElementById('intro-screen');
+      const introLogo   = document.getElementById('intro-logo');
+      const introSound  = document.getElementById('snd-intro');
+      const menuScreen  = document.getElementById('menu-screen');
+
+      function showMenu() {
+        introLogo.style.opacity = '0';
+        introLogo.addEventListener('transitionend', () => {
+          introScreen.style.display = 'none';
+          menuScreen.classList.remove('hidden');
+          const menuMusic = document.getElementById('snd-menu');
+          menuMusic.play().then(hideSoundHint).catch(() => {});
+        }, { once: true });
+      }
+
+      function runIntro() {
+        document.getElementById('intro-sound-hint').style.opacity = '0';
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            introLogo.style.opacity = '1';
+          });
+        });
+
+        const fallback = setTimeout(showMenu, 4000);
+        introSound.addEventListener('ended', () => {
+          clearTimeout(fallback);
+          showMenu();
+        }, { once: true });
+
+        function skipIntro() {
+          clearTimeout(fallback);
+          introSound.pause();
+          showMenu();
+        }
+        introScreen.addEventListener('pointerdown', skipIntro, { once: true });
+        document.addEventListener('keydown', skipIntro, { once: true });
+      }
+
+      introSound.play().then(runIntro).catch(() => {
+        function unlockIntro() {
+          // Must call play() synchronously inside the gesture handler for iOS Safari
+          introSound.play().catch(() => {});
+          runIntro();
+          document.removeEventListener('pointerdown', unlockIntro);
+          document.removeEventListener('keydown', unlockIntro);
+        }
+        document.addEventListener('pointerdown', unlockIntro);
+        document.addEventListener('keydown', unlockIntro);
+      });
+    })();
 
   </script>
 </body>
