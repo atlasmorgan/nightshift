@@ -231,6 +231,8 @@
   <audio id="snd-static"    src="assets/audio/camera_static.wav"  loop></audio>
   <audio id="snd-powerdown" src="assets/audio/power_down.wav"></audio>
   <audio id="snd-intro" src="assets/audio/intro_sting.wav" preload="auto"></audio>
+  <audio id="snd-musicbox-wav" src="assets/audio/musicbox.wav" preload="auto" loop></audio>
+  <audio id="snd-golden-freddy" src="assets/audio/golden_freddy_scream.mp3" preload="auto"></audio>
 
   <!-- Jumpscare full-screen image (shown briefly on game over) -->
   <img id="jumpscare-img" src="" alt="" />
@@ -965,7 +967,7 @@
 
       let msg;
       if (reason === "power") {
-        msg = "The power ran out… they got in.";
+        msg = '"It\'s Me"';
       } else {
         msg = `${reason} got into the office!`;
       }
@@ -976,10 +978,16 @@
 
       if (reason === "power") {
         playSound("snd-powerdown");
-        // Brief delay before showing overlay for power-out
         setTimeout(() => {
-          showOverlay("😱", "GAME OVER", msg);
-        }, 1200);
+          stopSound("snd-powerdown");
+          playSound("snd-musicbox-wav");
+          setTimeout(() => {
+            stopSound("snd-musicbox-wav");
+            triggerJumpscare("Golden Freddy", () => {
+              showOverlay("😱", "GAME OVER", msg);
+            }, "snd-golden-freddy", 12000);
+          }, 18000);
+        }, 3000);
       } else {
         // Jumpscare, then overlay
         triggerJumpscare(reason, () => {
@@ -1778,8 +1786,8 @@
      * stopAllSounds() — stops every managed sound.
      */
     function stopAllSounds() {
-      ["snd-ambience", "snd-musicbox", "snd-jumpscare",
-       "snd-flashlight", "snd-mask", "snd-static", "snd-powerdown"]
+      ["snd-ambience", "snd-musicbox", "snd-musicbox-wav", "snd-jumpscare",
+       "snd-flashlight", "snd-mask", "snd-static", "snd-powerdown", "snd-golden-freddy"]
         .forEach(stopSound);
     }
 
@@ -1855,6 +1863,7 @@
       "Mangle":          "assets/images/jumpscare_mangle.gif",
       "The Puppet":      "assets/images/jumpscare_puppet.gif",
       "Foxy":            "assets/images/jumpscare_foxy.gif",
+      "Golden Freddy":   "assets/images/jumpscare_golden_freddy.jpg",
     };
 
     // Fallback pool for animatronics without a dedicated image
@@ -1869,17 +1878,19 @@
      * Shows the attacker's jumpscare image full-screen for 1.5 s,
      * then calls `callback` (which shows the game-over text overlay).
      */
-    function triggerJumpscare(attackerName, callback) {
+    function triggerJumpscare(attackerName, callback, soundId = "snd-jumpscare", duration = null) {
       const img = document.getElementById("jumpscare-img");
       const src = JUMPSCARE_MAP[attackerName]
         ?? JUMPSCARE_FALLBACK[Math.floor(Math.random() * JUMPSCARE_FALLBACK.length)];
       img.src = src;
+      if (duration) img.style.animationDuration = duration + "ms";
       img.classList.add("active");
-      playSound("snd-jumpscare");
+      playSound(soundId);
 
       img.addEventListener("animationend", function onEnd() {
         img.removeEventListener("animationend", onEnd);
         img.classList.remove("active");
+        img.style.animationDuration = "";
         if (callback) callback();
       }, { once: true });
     }
