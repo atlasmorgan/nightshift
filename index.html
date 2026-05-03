@@ -979,10 +979,10 @@
       if (reason === "power") {
         playSound("snd-powerdown");
         setTimeout(() => {
-          stopSound("snd-powerdown");
           playSound("snd-musicbox-wav");
           setTimeout(() => {
-            stopSound("snd-musicbox-wav");
+            stopSound("snd-powerdown");
+            fadeOutSound("snd-musicbox-wav", 2000);
             triggerJumpscare("Golden Freddy", () => {
               showOverlay("😱", "GAME OVER", msg);
             }, "snd-golden-freddy", 12000);
@@ -1780,6 +1780,24 @@
       if (!el) return;
       el.pause();
       el.currentTime = 0;
+    }
+
+    function fadeOutSound(id, duration = 1500) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const step = 50;
+      const decrement = el.volume / (duration / step);
+      const fade = setInterval(() => {
+        if (el.volume > decrement) {
+          el.volume -= decrement;
+        } else {
+          el.volume = 0;
+          el.pause();
+          el.currentTime = 0;
+          el.volume = 1;
+          clearInterval(fade);
+        }
+      }, step);
     }
 
     /**
